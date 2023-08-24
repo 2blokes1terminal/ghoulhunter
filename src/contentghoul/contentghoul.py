@@ -5,15 +5,13 @@
 import requests
 from bs4 import BeautifulSoup
 
-#url lists - automate the population of this 
-#TEST VALUES#
-
-urls = ['https://news.com.au','https://warhammercommunity.com','https://ebay.com.au']
-
-for url in urls:
+def scan_url(url):
     reqs = requests.get(url)   
+
     #soupkitchen time
     soup = BeautifulSoup(reqs.text, 'html.parser')
+
     print('html title of', url)
+
     for title in soup.find_all('title'):
         print(title.get_text())

@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-from scanner import scanner
+from nrdghoul import nrdghoul
 
 import argparse
 
@@ -11,7 +11,7 @@ def main():
 
     args = parser.parse_args()
 
-    results = scanner.scan(args.brand_keywords)
+    results = nrdghoul.scan(args.brand_keywords)
     print("\n".join(results))
 
 if __name__ == "__main__":
