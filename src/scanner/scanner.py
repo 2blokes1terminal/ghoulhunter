@@ -8,7 +8,7 @@ import re
 def scan(keywords):
     now = datetime.datetime.now()
     month = str(now.month).zfill(2)
-    datezip = base64.b64encode(f'{now.year}-{month}-{now.day - 1}.zip'.encode()).decode()
+    datezip = base64.b64encode(f'{now.year}-{month}-{now.day - 2}.zip'.encode()).decode()
 
     req = requests.get(f'https://www.whoisds.com//whois-database/newly-registered-domains/{datezip}/nrd')
 
@@ -28,10 +28,11 @@ def scan(keywords):
     for keyword in keywords:
         regex = re.compile(keyword)
 
-        results.extend(list(filter(lambda domain: check_domain(regex, domain.decode()), domain_list)))
-    print(list(set(results)))
+        results.extend([x.decode() for x in list(filter(lambda domain: check_domain(regex, domain.decode()), domain_list))])
+    results = list(set(results))
+    results.sort()
     
-    # return domain_list
+    return results
 
 def check_domain(regex, domain):
     return re.search(regex, domain)

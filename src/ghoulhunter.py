@@ -12,7 +12,7 @@ def main():
     args = parser.parse_args()
 
     results = scanner.scan(args.brand_keywords)
-    print(results)
+    print("\n".join(results))
 
 if __name__ == "__main__":
     main()
