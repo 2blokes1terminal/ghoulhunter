@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 from nrdghoul import nrdghoul
+from contentghoul import contentghoul
 
 import argparse
 
@@ -12,6 +13,12 @@ def main():
     args = parser.parse_args()
 
     results = nrdghoul.scan(args.brand_keywords)
+
+    for url in results:
+        result = contentghoul.scan_domain(url)
+
+        print(result)
+    
     print("\n".join(results))
 
 if __name__ == "__main__":
