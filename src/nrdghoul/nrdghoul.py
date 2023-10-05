@@ -6,12 +6,13 @@ import base64
 from tqdm import tqdm
 import re
 
-def scan(keywords):
+def scan(keywords, time):
     now = datetime.datetime.now()
     month = str(now.month).zfill(2)
-    datezip = base64.b64encode(f'{now.year}-{month}-{now.day - 2}.zip'.encode()).decode()
+    day = str(now.day-time-1).zfill(2)
+    datezip = base64.b64encode(f'{now.year}-{month}-{day}.zip'.encode()).decode()
 
-    print('[.] downloading nrds for yesterday')
+    print('[nrdghoul - INFO] downloading nrds for yesterday')
     req = requests.get(f'https://www.whoisds.com//whois-database/newly-registered-domains/{datezip}/nrd', stream=True)
     content_length = int(req.headers.get('content-length', 0))
     block_size = 1024
@@ -24,11 +25,11 @@ def scan(keywords):
     progress_bar.close()
 
     if content_length != 0 and progress_bar.n != content_length:
-        print("[!] failed to download nrd list")
+        print("[nrdghoul - ERR] failed to download nrd list")
         return []
 
     zip = zipfile.ZipFile(content)
-    print('[*] downloaded nrd list')
+    print('[nrdghoul - OK] downloaded nrd list')
 
     for name in zip.namelist():
         if name == "domain-names.txt":
