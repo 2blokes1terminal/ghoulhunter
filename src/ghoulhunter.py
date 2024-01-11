@@ -25,6 +25,7 @@ def main():
     parser.add_argument('--time', '-t', help="Days back", default=1, type=int)
     parser.add_argument('--chrome-path', '-c', help="Path to chrome executable", default="/sbin/google-chrome-stable")
     parser.add_argument('--screenshot', '-s', help="Only screenshot domains", action=argparse.BooleanOptionalAction)
+    parser.add_argument('--input-file', '-i', help="Input domains from a file", type=str)
     args = parser.parse_args()
 
     print(f"[ghoulhunter - INFO] starting ghoulhunter with args: {args}")
@@ -39,9 +40,9 @@ def main():
     page = asyncio.get_event_loop().run_until_complete(get_browser())
     
     final_results = []
-    if args.screenshot:
-        results = nrdghoul.scan(args.brand_keywords, args.time)
-        
+
+    if args.screenshot and args.domain is None:
+        results = nrdghoul.scan(args.brand_keywords, args.time, args.input_file)
         for url in results:
             try:
                 print(f'[screenshotghoul - INFO] screenshotting {url}')
@@ -49,8 +50,7 @@ def main():
             except pyppeteer.errors.PageError as e:
                 print(f'[screenshotghoul - ERR] failed to screenshot domain {url}: {e}')
     elif args.domain is None:
-        results = nrdghoul.scan(args.brand_keywords, args.time)
-
+        results = nrdghoul.scan(args.brand_keywords, args.time, args.input_file)
         for url in results:
             content_result = contentghoul.scan_domain(url)
             if content_result["can_resolve"] is False:

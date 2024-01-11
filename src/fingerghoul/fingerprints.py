@@ -32,8 +32,36 @@ fingerprints = {
                     200
                 ],
                 "content": [
-                    "User-agent: Googlebot.*User-agent: Mediapartners-Google.*User-agent: Yahoo! Slurp"
+                    "User-agent: Googlebot(.|\n)*User-agent: Mediapartners-Google(.|\n)*User-agent: Yahoo! Slurp",
+                    "User-agent: Googlebot(.|\n)*User-agent: Baiduspider(.|\n)*User-agent: YandexBot(.|\n)*User-agent: ichiro",
                 ],
+                "is_pos": True,
+            }
+        ]
+    },
+    "mygov-phishing": {
+        "meta": {
+            "useragents": [
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
+                "Mozilla/5.0 (Windows NT 10.0; rv:109.0) Gecko/20100101 Firefox/118.0",
+                "gh0ul",
+            ],
+        },
+        "title": "",
+        "headers": [
+            {
+                "key": "location",
+                "value": "https?:\/\/google\.com",
+                "is_pos": True,
+            }
+        ],
+        "paths": [
+            {
+                "path": "/",
+                "code": [
+                    302
+                ],
+                "content": [],
                 "is_pos": True,
             }
         ]
