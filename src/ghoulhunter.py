@@ -3,6 +3,7 @@
 from screenshotghoul import screenshotghoul
 from contentghoul import contentghoul
 from fingerghoul import fingerghoul
+from gapihunter import gapihunter
 from nrdghoul import nrdghoul
 
 from pyppeteer import launch
@@ -11,6 +12,7 @@ import argparse
 import requests
 import asyncio
 import json
+import sys
 import os
 
 from urllib3.exceptions import InsecureRequestWarning
@@ -18,36 +20,51 @@ requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 
 def main():
-    parser = argparse.ArgumentParser(prog='ghoulhunter', description='hunt for phishing sites')
-    parser.add_argument('--brand-keywords', '-k', nargs='+', help='regex expression keywords')
-    parser.add_argument('--domain', '-d', help="Point ghoulhunter at a specific domain")
-    parser.add_argument('--output-dir', '-o', help="Output directory", default="output/")
+    parser = argparse.ArgumentParser(prog='ghoulhunter',
+                                     description='hunt for phishing sites')
+    parser.add_argument('--brand-keywords', '-k', nargs='+',
+                        help='regex expression keywords')
+    parser.add_argument('--domain', '-d',
+                        help="Point ghoulhunter at a specific domain")
+    parser.add_argument('--output-dir', '-o', help="Output directory",
+                        default="output/")
     parser.add_argument('--time', '-t', help="Days back", default=1, type=int)
-    parser.add_argument('--chrome-path', '-c', help="Path to chrome executable", default="/sbin/google-chrome-stable")
-    parser.add_argument('--screenshot', '-s', help="Only screenshot domains", action=argparse.BooleanOptionalAction)
+    parser.add_argument('--chrome-path', '-c',
+                        help="Path to chrome executable",
+                        default="/sbin/google-chrome-stable")
+    parser.add_argument('--screenshot', '-s', help="Only screenshot domains",
+                        action=argparse.BooleanOptionalAction)
     args = parser.parse_args()
+
+    if os.environ.get('GAPI_KEY') == "":
+        print("[ghoulhunter - ERR] please set the GAPI_KEY environment variable")
+        sys.exit(1)
 
     print(f"[ghoulhunter - INFO] starting ghoulhunter with args: {args}")
     if not os.path.isdir(args.output_dir):
         os.mkdir(args.output_dir)
-    
+
     async def get_browser():
-        browser = await launch({"args": ['--disable-gpu', '--disable-dev-shm-usage'], "executablePath": args.chrome_path})
+        browser = await launch({
+            "args":  ['--disable-gpu', '--disable-dev-shm-usage'],
+            "executablePath": args.chrome_path
+        })
         page = await browser.newPage()
         page.setDefaultNavigationTimeout(5000)
         return page
     page = asyncio.get_event_loop().run_until_complete(get_browser())
-    
+
     final_results = []
     if args.screenshot:
         results = nrdghoul.scan(args.brand_keywords, args.time)
-        
+
         for url in results:
             try:
                 print(f'[screenshotghoul - INFO] screenshotting {url}')
                 screenshotghoul.run_take_screenshot(url, page, args.output_dir)
             except pyppeteer.errors.PageError as e:
-                print(f'[screenshotghoul - ERR] failed to screenshot domain {url}: {e}')
+                print(f'[screenshotghoul - ERR] failed to screenshot domain \
+                     {url}: {e}')
     elif args.domain is None:
         results = nrdghoul.scan(args.brand_keywords, args.time)
 
@@ -57,10 +74,16 @@ def main():
                 continue
 
             finger_result = fingerghoul.scan_domain(url)
+            gapi_result = gapihunter.check_url(url)
 
             screenshotghoul.run_take_screenshot(url, page, args.output_dir)
 
-            final_results.append({"domain": url, "contentghoul_result": content_result, "fingerghoul_result": finger_result})
+            final_results.append({
+                "domain": url,
+                "contentghoul_result": content_result,
+                "fingerghoul_result": finger_result,
+                "gapihunter_result": gapi_result
+            })
 
     else:
         url = args.domain
@@ -70,10 +93,16 @@ def main():
             return
 
         finger_result = fingerghoul.scan_domain(url)
+        gapi_result = gapihunter.check_url(url)
 
         screenshotghoul.run_take_screenshot(url, page, '.')
 
-        final_results.append({"domain": url, "contentghoul_result": content_result, "fingerghoul_result": finger_result})
+        final_results.append({
+            "domain": url,
+            "contentghoul_result": content_result,
+            "fingerghoul_result": finger_result,
+            "gapihunter_result": gapi_result
+        })
     print(json.dumps(final_results, indent=2))
 
 
