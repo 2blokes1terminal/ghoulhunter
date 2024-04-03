@@ -19,6 +19,18 @@ from urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 
+def output_results(data, teams_webhook):
+    if teams_webhook is not None:
+        teams_json = {
+            "type": "TextBlock",
+            "text": "    [\n\n" + "\n".join(['       ' + x for x in data.split('\n')]), #.replace('\n', '\n\n'),
+        }
+
+        requests.post(json=teams_json, url=teams_webhook)
+    else:
+        print(data)
+
+
 def main():
     parser = argparse.ArgumentParser(prog='ghoulhunter',
                                      description='hunt for phishing sites')
@@ -35,6 +47,7 @@ def main():
     parser.add_argument('--screenshot', '-s', help="Only screenshot domains",
                         action=argparse.BooleanOptionalAction)
     parser.add_argument('--input-file', '-i', help="Input domains from a file", type=str)
+    parser.add_argument('--teams-webhook', '-w', help="Output results to a microsoft teams 'Incoming Webhook' adapter", type=str)
     args = parser.parse_args()
 
     if os.environ.get('GAPI_KEY') == "":
@@ -88,7 +101,7 @@ def main():
         url = args.domain
         content_result = contentghoul.scan_domain(url)
         if content_result["can_resolve"] is False:
-            print(json.dumps(final_results, indent=2))
+            output_results(json.dumps(final_results, indent=0), args.teams_webhook)
             return
 
         finger_result = fingerghoul.scan_domain(url)
@@ -102,7 +115,7 @@ def main():
             "fingerghoul_result": finger_result,
             "gapihunter_result": gapi_result
         })
-    print(json.dumps(final_results, indent=2))
+    output_results(json.dumps(final_results, indent=0), args.teams_webhook)
 
 
 if __name__ == "__main__":
