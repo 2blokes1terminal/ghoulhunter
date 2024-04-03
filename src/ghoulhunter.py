@@ -34,7 +34,6 @@ def main():
                         default="/sbin/google-chrome-stable")
     parser.add_argument('--screenshot', '-s', help="Only screenshot domains",
                         action=argparse.BooleanOptionalAction)
-    parser.add_argument('--screenshot', '-s', help="Only screenshot domains", action=argparse.BooleanOptionalAction)
     parser.add_argument('--input-file', '-i', help="Input domains from a file", type=str)
     args = parser.parse_args()
 
