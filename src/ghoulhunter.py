@@ -23,7 +23,7 @@ def output_results(data, teams_webhook):
     if teams_webhook is not None:
         teams_json = {
             "type": "TextBlock",
-            "text": "    [\n\n" + "\n".join(['       ' + x for x in data.split('\n')]), #.replace('\n', '\n\n'),
+            "text": "    [\n\n" + "\n".join(['       ' + x for x in data.split('\n')]),
         }
 
         requests.post(json=teams_json, url=teams_webhook)
@@ -45,6 +45,8 @@ def main():
                         help="Path to chrome executable",
                         default="/sbin/google-chrome-stable")
     parser.add_argument('--screenshot', '-s', help="Only screenshot domains",
+                        action=argparse.BooleanOptionalAction)
+    parser.add_argument('--list-domains', '-l', help="Only list domains found with nrdhunter",
                         action=argparse.BooleanOptionalAction)
     parser.add_argument('--input-file', '-i', help="Input domains from a file", type=str)
     parser.add_argument('--teams-webhook', '-w', help="Output results to a microsoft teams 'Incoming Webhook' adapter", type=str)
@@ -69,7 +71,11 @@ def main():
     page = asyncio.get_event_loop().run_until_complete(get_browser())
 
     final_results = []
-    if args.screenshot and args.domain is None:
+    if args.list_domains:
+        results = nrdghoul.scan(args.brand_keywords, args.time, args.input_file)
+
+        print("\n".join(results))
+    elif args.screenshot and args.domain is None:
         results = nrdghoul.scan(args.brand_keywords, args.time, args.input_file)
         for url in results:
             try:
@@ -88,7 +94,11 @@ def main():
             finger_result = fingerghoul.scan_domain(url)
             gapi_result = gapihunter.check_url(url)
 
-            screenshotghoul.run_take_screenshot(url, page, args.output_dir)
+            try:
+                screenshotghoul.run_take_screenshot(url, page, args.output_dir)
+            except pyppeteer.errors.PageError as e:
+                print(f'[screenshotghoul - ERR] failed to screenshot domain \
+                     {url}: {e}')
 
             final_results.append({
                 "domain": url,
