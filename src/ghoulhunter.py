@@ -21,14 +21,43 @@ requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 def output_results(data, teams_webhook):
     if teams_webhook is not None:
+        newline = '\n'
         teams_json = {
             "type": "TextBlock",
-            "text": "    [\n\n" + "\n".join(['       ' + x for x in data.split('\n')]),
+            "text": '\n'.join([
+                f"""
+# Result {i + 1}
+
+
+Domain: {result['domain']}
+
+IPs: {' '.join([' '.join(x) for x in result['contentghoul_result']['ip']])}
+
+IP Organisation: {result['contentghoul_result']['ipv4_org']} {result['contentghoul_result']['ipv6_org']}
+
+
+Google API results:
+
+```json
+{json.dumps(result['gapihunter_result'], indent=2)}
+```
+
+| Fingerprints | Matches | Total Possible Matches | Positive |
+| ------------ | ------- | ---------------------- | -------- |
+{newline.join([
+    f"| {x['name']} | {x['matches']} | {x['total']} | {x['positive']} |"
+    for x in result['fingerghoul_result']
+])}
+"""
+                for i, result in enumerate(data)
+            ])
         }
 
-        requests.post(json=teams_json, url=teams_webhook)
+        req = requests.post(json=teams_json, url=teams_webhook)
+        print(teams_json)
+        print(req)
     else:
-        print(data)
+        print(json.dumps(data, indent=2))
 
 
 def main():
@@ -111,7 +140,7 @@ def main():
         url = args.domain
         content_result = contentghoul.scan_domain(url)
         if content_result["can_resolve"] is False:
-            output_results(json.dumps(final_results, indent=0), args.teams_webhook)
+            output_results(final_results, args.teams_webhook)
             return
 
         finger_result = fingerghoul.scan_domain(url)
@@ -125,7 +154,7 @@ def main():
             "fingerghoul_result": finger_result,
             "gapihunter_result": gapi_result
         })
-    output_results(json.dumps(final_results, indent=0), args.teams_webhook)
+    output_results(final_results, args.teams_webhook)
 
 
 if __name__ == "__main__":
