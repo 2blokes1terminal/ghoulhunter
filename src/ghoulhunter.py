@@ -26,10 +26,9 @@ def output_results(data, teams_webhook):
             "type": "TextBlock",
             "text": '\n'.join([
                 f"""
-# Result {i + 1}
 
+# **Result {i + 1}: {result['domain']}**
 
-Domain: {result['domain']}
 
 IPs: {' '.join([' '.join(x) for x in result['contentghoul_result']['ip']])}
 
